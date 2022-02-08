@@ -10,6 +10,37 @@ import csv
 std_logbook_path = ''
 
 
+class AircraftInfo:
+
+    xplane_type = ''
+    manufacturer = 'Unknown mfr.'
+    acf_type = 'Unknown type'
+    engine_count = 1
+    acf_class = 'Land'  # Land/Seaplane/Amphibian
+
+    def __init__(self, xplane_type, manufacturer, acf_type, engine_count, acf_class):
+        self.xplane_type = xplane_type
+        self.manufacturer = manufacturer
+        self.acf_type = acf_type
+        self.engine_count = int(engine_count)
+        self.acf_class = acf_class
+
+    def get_xplane_type(self):
+        return self.xplane_type
+
+    def get_aircraft_type(self):
+        return self.acf_type
+
+    def get_aircraft_manufacturer(self):
+        return self.manufacturer
+
+    def get_list_analogue(self):
+        return [self.xplane_type, self.manufacturer, self.acf_type, self.engine_count, self.acf_class]
+
+    def get_resolved_info(self):
+        return [self.manufacturer, self.acf_type, self.engine_count, self.acf_class]
+
+
 class Flight:
 
     flight_date: date = '1980.01.30'
@@ -21,11 +52,10 @@ class Flight:
     instrument_hours = 0.0
     cross_country_hours = 0.0
     tail_number = ''
-    aircraft_manufacturer = ''
-    aircraft_type = ''
+    aircraft: AircraftInfo
 
     def __init__(self, flight_date, departure_airport, arrival_airport, landings_count, total_hours, night_hours,
-                 instrument_hours, cross_country_hours, tail_number, aircraft_manufacturer, aircraft_type):
+                 instrument_hours, cross_country_hours, tail_number, aircraft):
         self.flight_date = flight_date
         self.departure_airport = departure_airport
         self.arrival_airport = arrival_airport
@@ -35,8 +65,7 @@ class Flight:
         self.instrument_hours = float(instrument_hours)
         self.cross_country_hours = float(cross_country_hours)
         self.tail_number = tail_number
-        self.aircraft_manufacturer = aircraft_manufacturer
-        self.aircraft_type = aircraft_type
+        self.aircraft: AircraftInfo = aircraft
 
     def get_landings_count(self):
         return self.landings_count
@@ -54,15 +83,15 @@ class Flight:
         return self.cross_country_hours
 
     def get_aircraft_type(self):
-        return self.aircraft_type
+        return self.aircraft.get_aircraft_type()
 
     def get_aircraft_manufacturer(self):
-        return self.aircraft_manufacturer
+        return self.aircraft.get_aircraft_manufacturer()
 
     def get_list_analogue(self):
         return [self.flight_date, self.departure_airport, self.arrival_airport, self.landings_count, self.total_hours,
                 self.night_hours, self.instrument_hours, self.cross_country_hours, self.tail_number,
-                self.aircraft_manufacturer, self.aircraft_type]
+                *self.aircraft.get_resolved_info()]
 
 
 def greeter():
@@ -83,6 +112,7 @@ def print_main_menu():
     print('1. Print logbook')
     print('2. Edit logbook')
     print('3. Calculate stats')
+    print('7. Aircraft types')
     print('8. Settings')
     print('9. Save and exit')
     print('0. Exit w/o saving')
@@ -94,6 +124,17 @@ def print_stat_menu():
     print('1. Calculate landings and total hours by their types')
     print('2. Calculate landings and total hours by aircraft types')
     print('3. Calculate landings and total hours by aircraft manufacturers')
+    print('9. Return to main menu')
+    return
+
+
+def print_types_menu():
+    print('Select action:')
+    print('1. Print known type references')
+    print('2. Add type reference')
+    print('3. Remove type reference')
+    print('7. Load types config')
+    print('8. Write types config')
     print('9. Return to main menu')
     return
 
@@ -116,6 +157,8 @@ def user_input():
     try:
         new_input_data = int(input_data)
     except TypeError:
+        return input_data
+    except ValueError:
         return input_data
     else:
         return new_input_data
@@ -146,105 +189,15 @@ def change_settings():
     return
 
 
-def resolve_aircraft_type(xplane_type):
-    match xplane_type:
-        case '29_XP11':
-            return ['Aero', 'L-29']
-        case '29A_XP11':
-            return ['Aero', 'L-29']
-        case '29S_XP11':
-            return ['Aero', 'L-29']
-        case '29R_XP11':
-            return ['Aero', 'L-29']
-        case 'Aerolite_103':
-            return ['Aero-Works', 'Aerolite 103']
-        case 'a320neo':
-            return ['Airbus', 'A320neo']
-        case 'A350_xp11':
-            return ['Airbus', 'A350-900']
-        case 'a321_StdDef':
-            return ['Airbus', 'A321']
-        case 'a321':
-            return ['Airbus', 'A321']
-        case 'A340-600_StdDef':
-            return ['Airbus', 'A340-600']
-        case 'A340-600':
-            return ['Airbus', 'A340-600']
-        case 'a319_StdDef':
-            return ['Airbus', 'A319']
-        case 'a319':
-            return ['Airbus', 'A319']
-        case 'Baron_58':
-            return ['Beechcraft', 'Baron 58']
-        case 'C90B':
-            return ['Beechcraft', 'King Air C90B']
-        case '727-200Adv':
-            return ['Boeing', '727-200 Advanced']
-        case 'B733':
-            return ['Boeing', '737-300']
-        case 'B38M':
-            return ['Boeing', '737-800']
-        case 'b738':
-            return ['Boeing', '737-800']
-        case 'b738_4k':
-            return ['Boeing', '737-800']
-        case 'FJS_732_TwinJet':
-            return ['Boeing', '737-200']
-        case '757-200_xp11':
-            return ['Boeing', '757-200']
-        case '757-300_xp11':
-            return ['Boeing', '757-300']
-        case 'CRJ200':
-            return ['Bombardier', 'CRJ200']
-        case 'Cessna_172SP':
-            return ['Cessna', '172SP']
-        case 'Cessna_172SP_G1000':
-            return ['Cessna', '172SP']
-        case 'Cessna_172SP_seaplane':
-            return ['Cessna', '172SP']
-        case 'Car_Centurion':
-            return ['Cessna', 'CT210M Centurion II']
-        case 'CirrusSF50':
-            return ['Cirrus', 'Vision SF50']
-        case 'DHC6':
-            return ['De Havilland Canada', 'DHC-6 Twin Otter']
-        case 'DHC6F':
-            return ['De Havilland Canada', 'DHC-6 Twin Otter']
-        case 'DHC6T':
-            return ['De Havilland Canada', 'DHC-6 Twin Otter']
-        case 'DHC6S':
-            return ['De Havilland Canada', 'DHC-6 Twin Otter']
-        case 'DHC6G1000':
-            return ['De Havilland Canada', 'DHC-6 Twin Otter']
-        case 'Eclipse_NG':
-            return ['Eclipse', '550 NG']
-        case 'SR-71':
-            return ['Lockheed', 'SR-71 Blackbird']
-        case 'Rotate-MD-80-XP11':
-            return ['McDonnell Douglas', 'MD-88']
-        case 'F-4':
-            return ['McDonnell Douglas', 'F-4 Phantom II']
-        case 'Orbiter':
-            return ['[Multiple]', 'Space Shuttle']
-        case 'CONCORDE_FXP':
-            return ['Aérospatiale/BAC', 'Concorde']
-        case 'avanti':
-            return ['Piaggio', 'P.180 Avanti']
-        case 'Car_PC12':
-            return ['Pilatus', 'PC-12']
-        case 'ASK21':
-            return ['Schleicher', 'ASK 21']
-        case 'S-76C':
-            return ['Sikorsky', 'S-76 Spirit']
-        case 'L5_Sentinel':
-            return ['Stinson', 'L-5 Sentinel']
-        case 'tu154':
-            return ['Tupolev', 'TU-154M']
-        case _:
-            return ['Unknown mfr.', 'Unknown type']
+def resolve_aircraft_type(xplane_type, acf_types):
+    for i in range(len(acf_types)):
+        if xplane_type == acf_types[i].get_xplane_type():
+            return acf_types[i]
+    unknown_aircraft = AircraftInfo(xplane_type, 'Unknown mfr.', 'Unknown type', 0, 'Land')
+    return unknown_aircraft
 
 
-def input_from_std_file():
+def input_from_std_file(acf_types):
     global std_logbook_path
     read_settings()
     print('Reading from file '+std_logbook_path)
@@ -260,8 +213,7 @@ def input_from_std_file():
             flight_date = int(data[1])
             data[1] = date((2000 + int(str(flight_date)[:2])), int(str(flight_date)[2:4]), int(str(flight_date)[4:6]))
             flight = data[1:10]
-            flight[11:12] = resolve_aircraft_type(data[10])
-            current_flight = Flight(*flight)
+            current_flight = Flight(*flight, resolve_aircraft_type(data[10], acf_types))
             flights.append(current_flight)
         return flights
 
@@ -290,7 +242,8 @@ def print_flights(flights):
         flights_list.append([i+1, *flights[i].get_list_analogue()])
     flights_table = PrettyTable()
     flights_table.field_names = ['#', 'Flight date', 'Dep. ICAO', 'Arr. ICAO', 'LDG #', 'Total hours', 'Night hours',
-                                 'IFR hours', 'C/C hours', 'Tailnumber', 'ACF manufacturer', 'ACF type']
+                                 'IFR hours', 'C/C hours', 'Tailnumber', 'ACF manufacturer', 'ACF type', 'ENG #',
+                                 'ACF class']
     flights_table.add_rows(flights_list)
     flights_table.align = 'c'
     print(flights_table)
@@ -474,15 +427,116 @@ def calculate_stats(flights):
     return
 
 
+def load_type_reference():
+    acf_types = []
+    with open('./config/acf_types_table.csv', 'r') as acf_types_table:
+        reader = csv.reader(acf_types_table, delimiter=',', quotechar='"')
+        for row in reader:
+            if row:
+                acf_type = AircraftInfo(*row)
+                acf_types.append(acf_type)
+    return acf_types
+
+
+def write_type_reference(acf_types):
+    with open('./config/acf_types_table.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+        rows = []
+        for i in range(len(acf_types)):
+            row = acf_types[i].get_list_analogue()
+            rows.append(row)
+        writer.writerows(rows)
+    return
+
+
+def add_type_reference(acf_types):
+    acf_type = ['', '', '', 1, '']
+
+    print('Enter X-Plane 11 type:')
+    acf_type[0] = user_input()
+    print('Enter aircraft manufacturer:')
+    acf_type[1] = user_input()
+    print('Enter aircraft type:')
+    acf_type[2] = user_input()
+    print('Enter engines count:')
+    acf_type[3] = user_input()
+
+    # Land/Seaplane/Amphibian
+    print('Select aircraft class:')
+    print('1. Land')
+    print('2. Seaplane')
+    print('3. Amphibian')
+    acf_class = user_input()
+    match acf_class:
+        case 1:
+            acf_type[4] = 'Land'
+        case 2:
+            acf_type[4] = 'Seaplane'
+        case 3:
+            acf_type[4] = 'Amphibian'
+
+    new_acf_type = AircraftInfo(*acf_type)
+    acf_types.append(new_acf_type)
+
+    return acf_types
+
+
+def rm_type_reference(acf_types):
+    print_acf_types(acf_types)
+    print('Select # of type that will be deleted')
+    i = user_input()
+    print('Are you sure? [Y/N]')
+    acknowledge = user_input()
+    if acknowledge == 'y' or acknowledge == 'Y':
+        j = i
+        for j in range(j, len(acf_types)):
+            acf_types[j-1] = acf_types[j]
+        acf_types.pop(j)
+    return acf_types
+
+
+def print_acf_types(acf_types):
+    acf_types_list = []
+    for i in range(len(acf_types)):
+        acf_types_list.append([i+1, *acf_types[i].get_list_analogue()])
+    types_table = PrettyTable()
+    types_table.field_names = ['#', 'X-Plane type', 'ACF manufacturer', 'ACF type', 'ENG #', 'ACF class']
+    types_table.add_rows(acf_types_list)
+    types_table.align = 'c'
+    print(types_table)
+
+
+def acf_types_menu(acf_types):
+    user_choice = 1
+    while user_choice != 9:
+        match user_choice:
+            case 1:
+                print_acf_types(acf_types)
+            case 2:
+                acf_types = add_type_reference(acf_types)
+            case 3:
+                acf_types = rm_type_reference(acf_types)
+            case 7:
+                acf_types = load_type_reference()
+            case 8:
+                write_type_reference(acf_types)
+        print_types_menu()
+        user_choice = user_input()
+
+    return acf_types
+
+
 def main():
     greeter()
     print_load_menu()
-    user_choice = user_input()
 
+    acf_types = load_type_reference()
+
+    user_choice = user_input()
     if user_choice == 1:
-        flights = input_from_std_file()
+        flights = input_from_std_file(acf_types)
     else:
-        flights = input_from_csv_file()
+        flights = input_from_csv_file(acf_types)
 
     print(str(len(flights)) + ' flights loaded')
 
@@ -496,6 +550,8 @@ def main():
                 flights = edit_flights(flights)
             case 3:
                 calculate_stats(flights)
+            case 7:
+                acf_types = acf_types_menu(acf_types)
             case 8:
                 change_settings()
             case 9:
