@@ -1,7 +1,6 @@
-# This is a sample Python script.
+# PyFlightLogTool made by MiguelFox
+# Version 0.1.0, 09.02.2022
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 from datetime import date
 from prettytable import PrettyTable
@@ -93,10 +92,15 @@ class Flight:
                 self.night_hours, self.instrument_hours, self.cross_country_hours, self.tail_number,
                 *self.aircraft.get_resolved_info()]
 
+    def get_full_list_analogue(self):
+        return [self.flight_date, self.departure_airport, self.arrival_airport, self.landings_count, self.total_hours,
+                self.night_hours, self.instrument_hours, self.cross_country_hours, self.tail_number,
+                *self.aircraft.get_list_analogue()]
+
 
 def greeter():
     print('PyFlightLogTool by MiguelFox')
-    print('  Ver. 0.0.3, (08/02/2022)  ')
+    print('  Ver. 0.1.0, (09/02/2022)  ')
     return
 
 
@@ -167,7 +171,7 @@ def user_input():
 def read_settings():
     global std_logbook_path
     try:
-        settings_file = open('./settings.txt', 'r')
+        settings_file = open('./config/settings.txt', 'r')
     except FileNotFoundError:
         open('./settings.txt', 'w').close()
         change_settings()
@@ -180,10 +184,12 @@ def read_settings():
 
 def change_settings():
     global std_logbook_path
-    settings_file = open('./settings.txt', 'w+')
+    settings_file = open('./config/settings.txt', 'w+')
     std_logbook_path = settings_file.readline()
+    if std_logbook_path == '':
+        std_logbook_path = 'None specified'
     print('Current original logbook path: '+std_logbook_path)
-    print('Please enter full path to original logbook file: ')
+    print('Please enter full path to original logbook file:')
     std_logbook_path = user_input()
     settings_file.write(std_logbook_path)
     return
@@ -218,9 +224,12 @@ def input_from_std_file(acf_types):
         return flights
 
 
-def input_from_csv_file():
+def input_from_csv_file(acf_types):
     print('Please enter full path to .csv file')
     csv_logbook_path = user_input()
+    print(csv_logbook_path[:-4])
+    if csv_logbook_path[:-4] != '.csv':
+        pass
     flights = []
     with open(csv_logbook_path, 'r') as csv_logbook:
         reader = csv.reader(csv_logbook, delimiter=',', quotechar='"')
@@ -231,7 +240,7 @@ def input_from_csv_file():
                 this_flight_date = new_flight_date.split('/')
                 year, month, day = int(this_flight_date[2]), int(this_flight_date[0]), int(this_flight_date[1])
                 row[0] = date(year, month, day)
-                current_flight = Flight(*row)
+                current_flight = Flight(*row[0:9], (resolve_aircraft_type(row[9], acf_types)))
                 flights.append(current_flight)
     return flights
 
@@ -257,7 +266,7 @@ def write_to_file(flights):
         writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
         rows = []
         for i in range(len(flights)):
-            row = flights[i].get_list_analogue()
+            row = flights[i].get_full_list_analogue()
             row[0] = row[0].strftime('%m/%d/%Y')
             rows.append(row)
         writer.writerows(rows)
