@@ -1,5 +1,5 @@
 # PyFlightLogTool made by MiguelFox
-# Version 0.1.0, 09.02.2022
+# Version 0.1.1, 09.02.2022
 
 
 from datetime import date
@@ -24,6 +24,21 @@ class AircraftInfo:
         self.engine_count = int(engine_count)
         self.acf_class = acf_class
 
+    def set_xplane_type(self, xplane_type):
+        self.xplane_type = xplane_type
+
+    def set_aircraft_manufacturer(self, manufacturer):
+        self.manufacturer = manufacturer
+
+    def set_aircraft_type(self, acf_type):
+        self.acf_type = acf_type
+
+    def set_engine_count(self, engine_count):
+        self.engine_count = engine_count
+
+    def set_aircraft_class(self, acf_class):
+        self.acf_class = acf_class
+
     def get_xplane_type(self):
         return self.xplane_type
 
@@ -32,6 +47,12 @@ class AircraftInfo:
 
     def get_aircraft_manufacturer(self):
         return self.manufacturer
+
+    def get_engine_count(self):
+        return self.engine_count
+
+    def get_aircraft_class(self):
+        return self.acf_class
 
     def get_list_analogue(self):
         return [self.xplane_type, self.manufacturer, self.acf_type, self.engine_count, self.acf_class]
@@ -42,7 +63,7 @@ class AircraftInfo:
 
 class Flight:
 
-    flight_date: date = '1980.01.30'
+    flight_date: date
     departure_airport = '----'
     arrival_airport = '----'
     landings_count = 0
@@ -66,6 +87,38 @@ class Flight:
         self.tail_number = tail_number
         self.aircraft: AircraftInfo = aircraft
 
+    def set_flight_date(self, flight_date):
+        this_flight_date = flight_date.split('/')
+        self.flight_date = date(int(this_flight_date[0]), int(this_flight_date[1]), int(this_flight_date[2]))
+
+    def set_airports(self, departure_airport, arrival_airport):
+        self.departure_airport = departure_airport
+        self.arrival_airport = arrival_airport
+
+    def set_landings_count(self, landings_count):
+        self.landings_count = landings_count
+
+    def set_flight_hours(self, total_hours, night_hours, instrument_hours, cross_country_hours):
+        self.total_hours = total_hours
+        self.night_hours = night_hours
+        self.instrument_hours = instrument_hours
+        self.cross_country_hours = cross_country_hours
+
+    def set_tailnumber(self, tailnumber):
+        self.tail_number = tailnumber
+
+    def set_aircraft_manufacturer(self, manufacturer):
+        self.aircraft.manufacturer = manufacturer
+
+    def set_aircraft_type(self, acf_type):
+        self.aircraft.acf_type = acf_type
+
+    def set_engine_count(self, engine_count):
+        self.aircraft.engine_count = engine_count
+
+    def set_aircraft_class(self, acf_class):
+        self.aircraft.acf_class = acf_class
+
     def get_landings_count(self):
         return self.landings_count
 
@@ -81,11 +134,20 @@ class Flight:
     def get_cross_country_hours(self):
         return self.cross_country_hours
 
+    def get_aircraft_tailnumber(self):
+        return self.tail_number
+
     def get_aircraft_type(self):
         return self.aircraft.get_aircraft_type()
 
     def get_aircraft_manufacturer(self):
         return self.aircraft.get_aircraft_manufacturer()
+
+    def get_engine_count(self):
+        return self.aircraft.get_engine_count()
+
+    def get_aircraft_class(self):
+        return self.aircraft.get_aircraft_class()
 
     def get_list_analogue(self):
         return [self.flight_date, self.departure_airport, self.arrival_airport, self.landings_count, self.total_hours,
@@ -100,7 +162,7 @@ class Flight:
 
 def greeter():
     print('PyFlightLogTool by MiguelFox')
-    print('  Ver. 0.1.0, (09/02/2022)  ')
+    print('  Ver. 0.1.1, (09/02/2022)  ')
     return
 
 
@@ -150,10 +212,17 @@ def print_edit_menu():
     print('3. Edit landing count')
     print('4. Edit flight time')
     print('5. Edit tail number')
-    print('6. Edit aircraft manufacturer and type')
+    print('6. Edit aircraft info')
     print('7. Delete flight from logbook')
     print('9. Return to main menu')
     return
+
+
+def print_class_menu():
+    print('Select aircraft class:')
+    print('1. Land')
+    print('2. Seaplane')
+    print('3. Amphibian')
 
 
 def user_input():
@@ -240,7 +309,7 @@ def input_from_csv_file(acf_types):
                 this_flight_date = new_flight_date.split('/')
                 year, month, day = int(this_flight_date[2]), int(this_flight_date[0]), int(this_flight_date[1])
                 row[0] = date(year, month, day)
-                current_flight = Flight(*row[0:9], (resolve_aircraft_type(row[9], acf_types)))
+                current_flight = Flight(*row[0:9], AircraftInfo(*row[9:14]))
                 flights.append(current_flight)
     return flights
 
@@ -280,7 +349,7 @@ def edit_flights(flights):
     while i < 0 or i > len(flights):
         print('Flight number out of range! Enter correct number:')
         i = user_input()
-    flight = flights[i-1].get_list_analogue()
+    flight = flights[i-1]
     print_edit_menu()
     j = user_input()
     while j < 0 or j > 9:
@@ -288,33 +357,50 @@ def edit_flights(flights):
         j = user_input()
     match j:
         case 1:
-            print('Enter new flight date (YYYY-MM-DD)')
-            flight[0] = user_input()
+            print('Enter new flight date (YYYY/MM/DD)')
+            flight.set_flight_date(user_input())
         case 2:
             print('Enter new departure airport code:')
-            flight[1] = user_input()
+            airports = ['', '']
+            airports[1] = user_input()
             print('Enter new arrival airport code:')
-            flight[2] = user_input()
+            airports[2] = user_input()
+            flight.set_airports(*airports)
         case 3:
-            print('Enter new landing count:')
-            flight[3] = user_input()
+            print('Enter landings count:')
+            flight.set_landings_count(user_input())
         case 4:
+            flight_hours = [0.0, 0.0, 0.0, 0.0]
             print('Enter new total hours:')
-            flight[4] = user_input()
+            flight_hours[0] = user_input()
             print('Enter new night hours:')
-            flight[5] = user_input()
+            flight_hours[1] = user_input()
             print('Enter new instrument hours:')
-            flight[6] = user_input()
+            flight_hours[2] = user_input()
             print('Enter new cross-country hours:')
-            flight[7] = user_input()
+            flight_hours[3] = user_input()
+            flight.set_flight_hours(*flight_hours)
         case 5:
-            print('Enter new tail number:')
-            flight[8] = user_input()
+            print('Enter new tailnumber (current: ' + flight.get_aircraft_tailnumber() + '):')
+            flight.set_tailnumber(user_input())
         case 6:
-            print('Enter new aircraft manufacturer:')
-            flight[9] = user_input()
-            print('Enter new aircraft type:')
-            flight[10] = user_input()
+            print('Enter new aircraft manufacturer (current:' + flight.get_aircraft_manufacturer() + '):')
+            flight.set_aircraft_manufacturer(user_input())
+            print('Enter new aircraft type (current:' + flight.get_aircraft_type() + '):')
+            flight.set_aircraft_type(user_input())
+            print('Enter new engine count (current:' + str(flight.get_engine_count()) + '):')
+            flight.set_engine_count(user_input())
+            print('Select new aircraft class (current:' + flight.get_aircraft_class() + '):')
+            print_class_menu()
+            acf_class = user_input()
+            match acf_class:
+                case 1:
+                    new_class = 'Land'
+                case 2:
+                    new_class = 'Seaplane'
+                case 3:
+                    new_class = 'Amphibian'
+            flight.set_aircraft_class(new_class)
         case 7:
             print('Are you sure? [y/n]')
             control = user_input()
@@ -331,8 +417,7 @@ def edit_flights(flights):
         case _:
             return flights
 
-    new_flight = Flight(*flight)
-    flights[i - 1] = new_flight
+    flights[i - 1] = flight
     return flights
 
 
@@ -471,10 +556,7 @@ def add_type_reference(acf_types):
     acf_type[3] = user_input()
 
     # Land/Seaplane/Amphibian
-    print('Select aircraft class:')
-    print('1. Land')
-    print('2. Seaplane')
-    print('3. Amphibian')
+    print_class_menu()
     acf_class = user_input()
     match acf_class:
         case 1:
