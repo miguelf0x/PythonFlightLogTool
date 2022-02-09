@@ -1,5 +1,5 @@
 # PyFlightLogTool made by MiguelFox
-# Version 0.1.2, 09.02.2022
+# Version 0.1.3, 09.02.2022
 
 
 from datetime import date
@@ -134,6 +134,10 @@ class Flight:
     def get_cross_country_hours(self):
         return self.cross_country_hours
 
+    def get_hours_and_landings(self):
+        return [self.total_hours, self.night_hours, self.instrument_hours, self.cross_country_hours,
+                self.landings_count]
+
     def get_aircraft_tailnumber(self):
         return self.tailnumber
 
@@ -160,71 +164,51 @@ class Flight:
                 *self.aircraft.get_full_info()]
 
 
-def greeter():
-    print('PyFlightLogTool by MiguelFox')
-    print('  Ver. 0.1.2, (09/02/2022)  ')
-    return
+greeter = ['PyFlightLogTool by MiguelFox',
+           'Ver. 0.1.3, (09/02/2022)']
+load_menu = ['Select input method:',
+             '1. Load from original logbook file',
+             '2. Load from formatted (.csv) logbook file']
+main_menu = ['Select action:',
+             '1. Print logbook',
+             '2. Edit logbook',
+             '3. Calculate stats',
+             '7. Aircraft types',
+             '8. Settings',
+             '9. Save and exit',
+             '0. Exit w/o saving']
+stat_menu = ['Select action:',
+             '1. Calculate landings and total hours by their types',
+             '2. Calculate landings and total hours by aircraft types',
+             '3. Calculate landings and total hours by aircraft manufacturers',
+             '4. Calculate landings and total hours by engines count',
+             '5. Calculate landings and total hours by aircraft class',
+             '9. Return to main menu']
+types_menu = ['Select action:',
+              '1. Print known type references',
+              '2. Add type reference',
+              '3. Remove type reference',
+              '7. Load types config',
+              '8. Write types config',
+              '9. Return to main menu']
+edit_menu = ['Select action:',
+             '1. Edit flight date',
+             '2. Edit departure and arrival',
+             '3. Edit landing count',
+             '4. Edit flight time',
+             '5. Edit tail number',
+             '6. Edit aircraft info',
+             '7. Delete flight from logbook',
+             '9. Return to main menu']
+class_menu = ['Select aircraft class:',
+              '1. Land',
+              '2. Seaplane',
+              '3. Amphibian']
 
 
-def print_load_menu():
-    print('Select input method:')
-    print('1. Load from original logbook file')
-    print('2. Load from formatted (.csv) logbook file')
-    return
-
-
-def print_main_menu():
-    print('Select action:')
-    print('1. Print logbook')
-    print('2. Edit logbook')
-    print('3. Calculate stats')
-    print('7. Aircraft types')
-    print('8. Settings')
-    print('9. Save and exit')
-    print('0. Exit w/o saving')
-    return
-
-
-def print_stat_menu():
-    print('Select action:')
-    print('1. Calculate landings and total hours by their types')
-    print('2. Calculate landings and total hours by aircraft types')
-    print('3. Calculate landings and total hours by aircraft manufacturers')
-    print('4. Calculate landings and total hours by engines count')
-    print('5. Calculate landings and total hours by aircraft class')
-    print('9. Return to main menu')
-    return
-
-
-def print_types_menu():
-    print('Select action:')
-    print('1. Print known type references')
-    print('2. Add type reference')
-    print('3. Remove type reference')
-    print('7. Load types config')
-    print('8. Write types config')
-    print('9. Return to main menu')
-    return
-
-
-def print_edit_menu():
-    print('Select action:')
-    print('1. Edit flight date')
-    print('2. Edit departure and arrival')
-    print('3. Edit landing count')
-    print('4. Edit flight time')
-    print('5. Edit tail number')
-    print('6. Edit aircraft info')
-    print('7. Delete flight from logbook')
-    print('9. Return to main menu')
-    return
-
-
-def print_class_menu():
-    print('Select aircraft class:')
-    print('1. Land')
-    print('2. Seaplane')
-    print('3. Amphibian')
+def print_menu(menu):
+    for i in menu:
+        print(i)
 
 
 def user_input():
@@ -353,7 +337,7 @@ def edit_flights(flights):
         print('Flight number out of range! Enter correct number:')
         i = user_input()
     flight = flights[i-1]
-    print_edit_menu()
+    print_menu(edit_menu)
     j = user_input()
     while j < 0 or j > 9:
         print('Menu entry number out of range! Enter correct number:')
@@ -394,7 +378,7 @@ def edit_flights(flights):
             print('Enter new engine count (current:' + str(flight.get_engines_count()) + '):')
             flight.set_engines_count(user_input())
             print('Select new aircraft class (current:' + flight.get_aircraft_class() + '):')
-            print_class_menu()
+            print_menu(class_menu)
             acf_class = user_input()
             new_class = 'Land'
             match acf_class:
@@ -427,11 +411,12 @@ def calculate_total(flights):
     total_hours_sum = night_hours_sum = instrument_hours_sum = cross_country_sum = 0.0
     total_landings = 0
     for i in range(len(flights)):
-        total_hours_sum = total_hours_sum + flights[i].get_total_hours()
-        night_hours_sum = night_hours_sum + flights[i].get_night_hours()
-        instrument_hours_sum = instrument_hours_sum + flights[i].get_instrument_hours()
-        cross_country_sum = cross_country_sum + flights[i].get_cross_country_hours()
-        total_landings = total_landings + flights[i].get_landings_count()
+        total_hours_sum += flights[i].get_total_hours()
+        night_hours_sum += flights[i].get_night_hours()
+        instrument_hours_sum += flights[i].get_instrument_hours()
+        cross_country_sum += flights[i].get_cross_country_hours()
+        total_landings += flights[i].get_landings_count()
+
     hours_table = PrettyTable()
     hours_table.field_names = ['Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
                                'Total landings']
@@ -457,20 +442,18 @@ def calculate_total_by_type(flights):
         total_landings = 0
         for i in range(len(flights)):
             if aircraft_type == flights[i].get_aircraft_type():
-                total_hours_sum = total_hours_sum + flights[i].get_total_hours()
-                night_hours_sum = night_hours_sum + flights[i].get_night_hours()
-                instrument_hours_sum = instrument_hours_sum + flights[i].get_instrument_hours()
-                cross_country_sum = cross_country_sum + flights[i].get_cross_country_hours()
-                total_landings = total_landings + flights[i].get_landings_count()
+                total_hours_sum += flights[i].get_total_hours()
+                night_hours_sum += flights[i].get_night_hours()
+                instrument_hours_sum += flights[i].get_instrument_hours()
+                cross_country_sum += flights[i].get_cross_country_hours()
+                total_landings += flights[i].get_landings_count()
         aircraft_type_stat.append([aircraft_type, total_hours_sum.__round__(1), night_hours_sum.__round__(1),
                                    instrument_hours_sum.__round__(1), cross_country_sum.__round__(1), total_landings])
 
-    type_table = PrettyTable()
-    type_table.field_names = ['Aircraft type', 'Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
-                              'Total landings']
-    type_table.add_rows(aircraft_type_stat)
-    type_table.align = 'c'
-    print(type_table)
+    aircraft_type_stat.sort()
+    field_names = ['Aircraft type', 'Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
+                   'Total landings']
+    draw_table(field_names, aircraft_type_stat)
     return
 
 
@@ -488,21 +471,19 @@ def calculate_total_by_manufacturer(flights):
 
         for i in range(len(flights)):
             if aircraft_manufacturer == flights[i].get_aircraft_manufacturer():
-                total_hours_sum = total_hours_sum + flights[i].get_total_hours()
-                night_hours_sum = night_hours_sum + flights[i].get_night_hours()
-                instrument_hours_sum = instrument_hours_sum + flights[i].get_instrument_hours()
-                cross_country_sum = cross_country_sum + flights[i].get_cross_country_hours()
-                total_landings = total_landings + flights[i].get_landings_count()
+                total_hours_sum += flights[i].get_total_hours()
+                night_hours_sum += flights[i].get_night_hours()
+                instrument_hours_sum += flights[i].get_instrument_hours()
+                cross_country_sum += flights[i].get_cross_country_hours()
+                total_landings += flights[i].get_landings_count()
         aircraft_manufacturers_stat.append([aircraft_manufacturer, total_hours_sum.__round__(1),
                                            night_hours_sum.__round__(1), instrument_hours_sum.__round__(1),
                                            cross_country_sum.__round__(1), total_landings])
 
-    manufacturer_table = PrettyTable()
-    manufacturer_table.field_names = ['Aircraft manufacturer', 'Total hours', 'Total night hours', 'Total IFR hours',
-                                      'Total C/C hours', 'Total landings']
-    manufacturer_table.add_rows(aircraft_manufacturers_stat)
-    manufacturer_table.align = 'c'
-    print(manufacturer_table)
+    aircraft_manufacturers_stat.sort()
+    field_names = ['Aircraft manufacturer', 'Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
+                   'Total landings']
+    draw_table(field_names, aircraft_manufacturers_stat)
     return
 
 
@@ -520,21 +501,18 @@ def calculate_total_by_engine_count(flights):
 
         for i in range(len(flights)):
             if engines_count == flights[i].get_engines_count():
-                total_hours_sum = total_hours_sum + flights[i].get_total_hours()
-                night_hours_sum = night_hours_sum + flights[i].get_night_hours()
-                instrument_hours_sum = instrument_hours_sum + flights[i].get_instrument_hours()
-                cross_country_sum = cross_country_sum + flights[i].get_cross_country_hours()
-                total_landings = total_landings + flights[i].get_landings_count()
+                total_hours_sum += flights[i].get_total_hours()
+                night_hours_sum += flights[i].get_night_hours()
+                instrument_hours_sum += flights[i].get_instrument_hours()
+                cross_country_sum += flights[i].get_cross_country_hours()
+                total_landings += flights[i].get_landings_count()
         engines_count_stat.append([engines_count, total_hours_sum.__round__(1), night_hours_sum.__round__(1),
                                    instrument_hours_sum.__round__(1), cross_country_sum.__round__(1), total_landings])
 
     engines_count_stat.sort()
-    engine_table = PrettyTable()
-    engine_table.field_names = ['Engines count', 'Total hours', 'Total night hours', 'Total IFR hours',
-                                'Total C/C hours', 'Total landings']
-    engine_table.add_rows(engines_count_stat)
-    engine_table.align = 'c'
-    print(engine_table)
+    field_names = ['Engines count', 'Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
+                   'Total landings']
+    draw_table(field_names, engines_count_stat)
     return
 
 
@@ -552,28 +530,33 @@ def calculate_total_by_aircraft_class(flights):
 
         for i in range(len(flights)):
             if aircraft_class == flights[i].get_aircraft_class():
-                total_hours_sum = total_hours_sum + flights[i].get_total_hours()
-                night_hours_sum = night_hours_sum + flights[i].get_night_hours()
-                instrument_hours_sum = instrument_hours_sum + flights[i].get_instrument_hours()
-                cross_country_sum = cross_country_sum + flights[i].get_cross_country_hours()
-                total_landings = total_landings + flights[i].get_landings_count()
+                total_hours_sum += flights[i].get_total_hours()
+                night_hours_sum += flights[i].get_night_hours()
+                instrument_hours_sum += flights[i].get_instrument_hours()
+                cross_country_sum += flights[i].get_cross_country_hours()
+                total_landings += flights[i].get_landings_count()
         aircraft_class_stat.append([aircraft_class, total_hours_sum.__round__(1), night_hours_sum.__round__(1),
                                    instrument_hours_sum.__round__(1), cross_country_sum.__round__(1), total_landings])
 
     aircraft_class_stat.sort()
-    engine_table = PrettyTable()
-    engine_table.field_names = ['Aircraft class', 'Total hours', 'Total night hours', 'Total IFR hours',
-                                'Total C/C hours', 'Total landings']
-    engine_table.add_rows(aircraft_class_stat)
-    engine_table.align = 'c'
-    print(engine_table)
+    field_names = ['Aircraft class', 'Total hours', 'Total night hours', 'Total IFR hours','Total C/C hours',
+                   'Total landings']
+    draw_table(field_names, aircraft_class_stat)
     return
+
+
+def draw_table(field_names, rows):
+    table = PrettyTable()
+    table.field_names = field_names
+    table.add_rows(rows)
+    table.align = 'c'
+    print(table)
 
 
 def calculate_stats(flights):
     user_choice = 7
     while user_choice < 9:
-        print_stat_menu()
+        print_menu(stat_menu)
         user_choice = user_input()
         match user_choice:
             case 1:
@@ -626,11 +609,10 @@ def add_type_reference(acf_types):
     acf_type[3] = user_input()
 
     # Land/Seaplane/Amphibian
-    print_class_menu()
+    print_menu(class_menu)
     acf_class = user_input()
+    acf_type[4] = 'Land'
     match acf_class:
-        case 1:
-            acf_type[4] = 'Land'
         case 2:
             acf_type[4] = 'Seaplane'
         case 3:
@@ -681,15 +663,15 @@ def acf_types_menu(acf_types):
                 acf_types = load_type_reference()
             case 8:
                 write_type_reference(acf_types)
-        print_types_menu()
+        print_menu(types_menu)
         user_choice = user_input()
 
     return acf_types
 
 
 def main():
-    greeter()
-    print_load_menu()
+    print_menu(greeter)
+    print_menu(load_menu)
 
     acf_types = load_type_reference()
 
@@ -710,7 +692,7 @@ def main():
     print(str(len(flights)) + ' flights loaded')
 
     while user_choice < 9:
-        print_main_menu()
+        print_menu(main_menu)
         user_choice = user_input()
         match user_choice:
             case 1:
