@@ -1,5 +1,5 @@
 # PyFlightLogTool made by MiguelFox
-# Version 0.1.3, 09.02.2022
+# Version 0.1.4, 09.02.2022
 
 
 from datetime import date
@@ -135,8 +135,8 @@ class Flight:
         return self.cross_country_hours
 
     def get_hours_and_landings(self):
-        return [self.total_hours, self.night_hours, self.instrument_hours, self.cross_country_hours,
-                self.landings_count]
+        return [self.total_hours.__round__(1), self.night_hours.__round__(1), self.instrument_hours.__round__(1),
+                self.cross_country_hours.__round__(1), self.landings_count]
 
     def get_aircraft_tailnumber(self):
         return self.tailnumber
@@ -165,7 +165,7 @@ class Flight:
 
 
 greeter = ['PyFlightLogTool by MiguelFox',
-           'Ver. 0.1.3, (09/02/2022)']
+           'Ver. 0.1.4, (09/02/2022)']
 load_menu = ['Select input method:',
              '1. Load from original logbook file',
              '2. Load from formatted (.csv) logbook file']
@@ -436,19 +436,13 @@ def calculate_total_by_type(flights):
     for i in range(len(flights)):
         if not flights[i].get_aircraft_type() in aircraft_type_list:
             aircraft_type_list.append(flights[i].get_aircraft_type())
-
-    for aircraft_type in aircraft_type_list:
-        total_hours_sum = night_hours_sum = instrument_hours_sum = cross_country_sum = 0.0
-        total_landings = 0
-        for i in range(len(flights)):
-            if aircraft_type == flights[i].get_aircraft_type():
-                total_hours_sum += flights[i].get_total_hours()
-                night_hours_sum += flights[i].get_night_hours()
-                instrument_hours_sum += flights[i].get_instrument_hours()
-                cross_country_sum += flights[i].get_cross_country_hours()
-                total_landings += flights[i].get_landings_count()
-        aircraft_type_stat.append([aircraft_type, total_hours_sum.__round__(1), night_hours_sum.__round__(1),
-                                   instrument_hours_sum.__round__(1), cross_country_sum.__round__(1), total_landings])
+            aircraft_type_stat.append([flights[i].get_aircraft_type(), *flights[i].get_hours_and_landings()])
+        else:
+            n = aircraft_type_list.index(flights[i].get_aircraft_type())
+            for j in range(1, 4):
+                aircraft_type_stat[n][j] += flights[i].get_hours_and_landings()[j - 1]
+                aircraft_type_stat[n][j] = aircraft_type_stat[n][j].__round__(1)
+            aircraft_type_stat[n][5] += flights[i].get_hours_and_landings()[4]
 
     aircraft_type_stat.sort()
     field_names = ['Aircraft type', 'Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
@@ -464,21 +458,14 @@ def calculate_total_by_manufacturer(flights):
     for i in range(len(flights)):
         if not flights[i].get_aircraft_manufacturer() in aircraft_manufacturers_list:
             aircraft_manufacturers_list.append(flights[i].get_aircraft_manufacturer())
-
-    for aircraft_manufacturer in aircraft_manufacturers_list:
-        total_hours_sum = night_hours_sum = instrument_hours_sum = cross_country_sum = 0.0
-        total_landings = 0
-
-        for i in range(len(flights)):
-            if aircraft_manufacturer == flights[i].get_aircraft_manufacturer():
-                total_hours_sum += flights[i].get_total_hours()
-                night_hours_sum += flights[i].get_night_hours()
-                instrument_hours_sum += flights[i].get_instrument_hours()
-                cross_country_sum += flights[i].get_cross_country_hours()
-                total_landings += flights[i].get_landings_count()
-        aircraft_manufacturers_stat.append([aircraft_manufacturer, total_hours_sum.__round__(1),
-                                           night_hours_sum.__round__(1), instrument_hours_sum.__round__(1),
-                                           cross_country_sum.__round__(1), total_landings])
+            aircraft_manufacturers_stat.append([flights[i].get_aircraft_manufacturer(),
+                                                *flights[i].get_hours_and_landings()])
+        else:
+            n = aircraft_manufacturers_list.index(flights[i].get_aircraft_manufacturer())
+            for j in range(1, 4):
+                aircraft_manufacturers_stat[n][j] += flights[i].get_hours_and_landings()[j - 1]
+                aircraft_manufacturers_stat[n][j] = aircraft_manufacturers_stat[n][j].__round__(1)
+            aircraft_manufacturers_stat[n][5] += flights[i].get_hours_and_landings()[4]
 
     aircraft_manufacturers_stat.sort()
     field_names = ['Aircraft manufacturer', 'Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
@@ -494,20 +481,13 @@ def calculate_total_by_engine_count(flights):
     for i in range(len(flights)):
         if not flights[i].get_engines_count() in engines_count_list:
             engines_count_list.append(flights[i].get_engines_count())
-
-    for engines_count in engines_count_list:
-        total_hours_sum = night_hours_sum = instrument_hours_sum = cross_country_sum = 0.0
-        total_landings = 0
-
-        for i in range(len(flights)):
-            if engines_count == flights[i].get_engines_count():
-                total_hours_sum += flights[i].get_total_hours()
-                night_hours_sum += flights[i].get_night_hours()
-                instrument_hours_sum += flights[i].get_instrument_hours()
-                cross_country_sum += flights[i].get_cross_country_hours()
-                total_landings += flights[i].get_landings_count()
-        engines_count_stat.append([engines_count, total_hours_sum.__round__(1), night_hours_sum.__round__(1),
-                                   instrument_hours_sum.__round__(1), cross_country_sum.__round__(1), total_landings])
+            engines_count_stat.append([flights[i].get_engines_count(), *flights[i].get_hours_and_landings()])
+        else:
+            n = engines_count_list.index(flights[i].get_engines_count())
+            for j in range(1, 4):
+                engines_count_stat[n][j] += flights[i].get_hours_and_landings()[j - 1]
+                engines_count_stat[n][j] = engines_count_stat[n][j].__round__(1)
+            engines_count_stat[n][5] += flights[i].get_hours_and_landings()[4]
 
     engines_count_stat.sort()
     field_names = ['Engines count', 'Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
@@ -523,23 +503,17 @@ def calculate_total_by_aircraft_class(flights):
     for i in range(len(flights)):
         if not flights[i].get_aircraft_class() in aircraft_class_list:
             aircraft_class_list.append(flights[i].get_aircraft_class())
-
-    for aircraft_class in aircraft_class_list:
-        total_hours_sum = night_hours_sum = instrument_hours_sum = cross_country_sum = 0.0
-        total_landings = 0
-
-        for i in range(len(flights)):
-            if aircraft_class == flights[i].get_aircraft_class():
-                total_hours_sum += flights[i].get_total_hours()
-                night_hours_sum += flights[i].get_night_hours()
-                instrument_hours_sum += flights[i].get_instrument_hours()
-                cross_country_sum += flights[i].get_cross_country_hours()
-                total_landings += flights[i].get_landings_count()
-        aircraft_class_stat.append([aircraft_class, total_hours_sum.__round__(1), night_hours_sum.__round__(1),
-                                   instrument_hours_sum.__round__(1), cross_country_sum.__round__(1), total_landings])
+            aircraft_class_stat.append([flights[i].get_aircraft_class(),
+                                        *flights[i].get_hours_and_landings()])
+        else:
+            n = aircraft_class_list.index(flights[i].get_aircraft_class())
+            for j in range(1, 4):
+                aircraft_class_stat[n][j] += flights[i].get_hours_and_landings()[j-1]
+                aircraft_class_stat[n][j] = aircraft_class_stat[n][j].__round__(1)
+            aircraft_class_stat[n][5] += flights[i].get_hours_and_landings()[4]
 
     aircraft_class_stat.sort()
-    field_names = ['Aircraft class', 'Total hours', 'Total night hours', 'Total IFR hours','Total C/C hours',
+    field_names = ['Aircraft class', 'Total hours', 'Total night hours', 'Total IFR hours', 'Total C/C hours',
                    'Total landings']
     draw_table(field_names, aircraft_class_stat)
     return
