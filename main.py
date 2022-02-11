@@ -356,7 +356,7 @@ def edit_flights(flights):
     flight = flights[i-1]
 
     print_menu(edit_menu)
-    j = user_input()
+    j = 8
     while j != 0:
         j = user_input()
         match j:
@@ -417,6 +417,8 @@ def edit_flights(flights):
                     return flights
                 else:
                     return
+            case 8:
+                pass
             case 9:
                 return flights
             case _:
