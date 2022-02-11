@@ -354,73 +354,73 @@ def edit_flights(flights):
         print('Flight number out of range! Enter correct number:')
         i = user_input()
     flight = flights[i-1]
+
     print_menu(edit_menu)
     j = user_input()
-    while j < 0 or j > 9:
-        print('Menu entry number out of range! Enter correct number:')
+    while j != 0:
         j = user_input()
-    match j:
-        case 1:
-            print('Enter new flight date (YYYY/MM/DD)')
-            flight.set_flight_date(user_input())
-        case 2:
-            print('Enter new departure airport code:')
-            airports = ['', '']
-            airports[1] = user_input()
-            print('Enter new arrival airport code:')
-            airports[2] = user_input()
-            flight.set_airports(*airports)
-        case 3:
-            print('Enter landings count:')
-            flight.set_landings_count(user_input())
-        case 4:
-            flight_hours = [0.0, 0.0, 0.0, 0.0]
-            print('Enter new total hours:')
-            flight_hours[0] = user_input()
-            print('Enter new night hours:')
-            flight_hours[1] = user_input()
-            print('Enter new instrument hours:')
-            flight_hours[2] = user_input()
-            print('Enter new cross-country hours:')
-            flight_hours[3] = user_input()
-            flight.set_flight_hours(*flight_hours)
-        case 5:
-            print('Enter new tailnumber (current: ' + flight.get_aircraft_tailnumber() + '):')
-            flight.set_tailnumber(user_input())
-        case 6:
-            print('Enter new aircraft manufacturer (current:' + flight.get_aircraft_manufacturer() + '):')
-            flight.set_aircraft_manufacturer(user_input())
-            print('Enter new aircraft type (current:' + flight.get_aircraft_type() + '):')
-            flight.set_aircraft_type(user_input())
-            print('Enter new engine count (current:' + str(flight.get_engines_count()) + '):')
-            flight.set_engines_count(user_input())
-            print('Enter new engine type (current:' + str(flight.get_engines_type()) + '):')
-            flight.set_engine_type(user_input())
-            print('Select new aircraft class (current:' + flight.get_aircraft_class() + '):')
-            print_menu(class_menu)
-            acf_class = user_input()
-            new_class = 'Land'
-            match acf_class:
-                case 2:
-                    new_class = 'Seaplane'
-                case 3:
-                    new_class = 'Amphibian'
-            flight.set_aircraft_class(new_class)
-        case 7:
-            print('Are you sure? [y/n]')
-            control = user_input()
-            if control == 'y' or control == 'Y':
-                k = i
-                for k in range(i, len(flights)):
-                    flights[k-1] = flights[k]
-                flights.pop(k)
+        match j:
+            case 1:
+                print('Enter new flight date (YYYY/MM/DD)')
+                flight.set_flight_date(user_input())
+            case 2:
+                print('Enter new departure airport code:')
+                airports = ['', '']
+                airports[1] = user_input()
+                print('Enter new arrival airport code:')
+                airports[2] = user_input()
+                flight.set_airports(*airports)
+            case 3:
+                print('Enter landings count:')
+                flight.set_landings_count(user_input())
+            case 4:
+                flight_hours = [0.0, 0.0, 0.0, 0.0]
+                print('Enter new total hours:')
+                flight_hours[0] = user_input()
+                print('Enter new night hours:')
+                flight_hours[1] = user_input()
+                print('Enter new instrument hours:')
+                flight_hours[2] = user_input()
+                print('Enter new cross-country hours:')
+                flight_hours[3] = user_input()
+                flight.set_flight_hours(*flight_hours)
+            case 5:
+                print('Enter new tailnumber (current: ' + flight.get_aircraft_tailnumber() + '):')
+                flight.set_tailnumber(user_input())
+            case 6:
+                print('Enter new aircraft manufacturer (current:' + flight.get_aircraft_manufacturer() + '):')
+                flight.set_aircraft_manufacturer(user_input())
+                print('Enter new aircraft type (current:' + flight.get_aircraft_type() + '):')
+                flight.set_aircraft_type(user_input())
+                print('Enter new engine count (current:' + str(flight.get_engines_count()) + '):')
+                flight.set_engines_count(user_input())
+                print('Enter new engine type (current:' + str(flight.get_engines_type()) + '):')
+                flight.set_engine_type(user_input())
+                print('Select new aircraft class (current:' + flight.get_aircraft_class() + '):')
+                print_menu(class_menu)
+                acf_class = user_input()
+                new_class = 'Land'
+                match acf_class:
+                    case 2:
+                        new_class = 'Seaplane'
+                    case 3:
+                        new_class = 'Amphibian'
+                flight.set_aircraft_class(new_class)
+            case 7:
+                print('Are you sure? [y/n]')
+                control = user_input()
+                if control == 'y' or control == 'Y':
+                    k = i
+                    for k in range(i, len(flights)):
+                        flights[k-1] = flights[k]
+                    flights.pop(k)
+                    return flights
+                else:
+                    return
+            case 9:
                 return flights
-            else:
-                return
-        case 9:
-            return flights
-        case _:
-            return flights
+            case _:
+                print('Menu entry number out of range! Enter correct number:')
 
     flights[i - 1] = flight
     return flights
