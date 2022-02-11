@@ -15,13 +15,16 @@ class AircraftInfo:
     manufacturer = 'Unknown mfr.'
     aircraft_type = 'Unknown type'
     engines_count = 1
+    engines_type = 'Unknown'  # Piston/Turboprop/Turboshaft/Turbojet/Turbofan/Electric/Unknown/None
     aircraft_class = 'Land'  # Land/Seaplane/Amphibian
 
-    def __init__(self, xplane_type, manufacturer, aircraft_type, engines_count, aircraft_class):
+    def __init__(self, xplane_type, manufacturer, aircraft_type, engines_count, engines_type='Unknown',
+                 aircraft_class='Land'):
         self.xplane_type = xplane_type
         self.manufacturer = manufacturer
         self.aircraft_type = aircraft_type
         self.engines_count = int(engines_count)
+        self.engines_type = engines_type
         self.aircraft_class = aircraft_class
 
     def set_xplane_type(self, xplane_type):
@@ -35,6 +38,9 @@ class AircraftInfo:
 
     def set_engines_count(self, engines_count):
         self.engines_count = engines_count
+
+    def set_engines_type(self, engines_type):
+        self.engines_type = engines_type
 
     def set_aircraft_class(self, acf_class):
         self.aircraft_class = acf_class
@@ -51,14 +57,18 @@ class AircraftInfo:
     def get_engines_count(self):
         return self.engines_count
 
+    def get_engines_type(self):
+        return self.engines_type
+
     def get_aircraft_class(self):
         return self.aircraft_class
 
     def get_full_info(self):
-        return [self.xplane_type, self.manufacturer, self.aircraft_type, self.engines_count, self.aircraft_class]
+        return [self.xplane_type, self.manufacturer, self.aircraft_type, self.engines_count, self.engines_type,
+                self.aircraft_class]
 
     def get_resolved_info(self):
-        return [self.manufacturer, self.aircraft_type, self.engines_count, self.aircraft_class]
+        return [self.manufacturer, self.aircraft_type, self.engines_count, self.engines_type, self.aircraft_class]
 
 
 class Flight:
@@ -116,6 +126,9 @@ class Flight:
     def set_engine_count(self, engine_count):
         self.aircraft.engines_count = engine_count
 
+    def set_engine_type(self, engine_type):
+        self.aircraft.engines_type = engine_type
+
     def set_aircraft_class(self, acf_class):
         self.aircraft.aircraft_class = acf_class
 
@@ -150,6 +163,9 @@ class Flight:
     def get_engines_count(self):
         return self.aircraft.get_engines_count()
 
+    def get_engines_type(self):
+        return self.aircraft.get_engines_type()
+
     def get_aircraft_class(self):
         return self.aircraft.get_aircraft_class()
 
@@ -182,7 +198,8 @@ stat_menu = ['Select action:',
              '2. Calculate landings and total hours by aircraft types',
              '3. Calculate landings and total hours by aircraft manufacturers',
              '4. Calculate landings and total hours by engines count',
-             '5. Calculate landings and total hours by aircraft class',
+             '5. Calculate landings and total hours by engines type',
+             '6. Calculate landings and total hours by aircraft class',
              '9. Return to main menu']
 types_menu = ['Select action:',
               '1. Print known type references',
@@ -254,7 +271,7 @@ def resolve_aircraft_type(xplane_type, acf_types):
     for i in range(len(acf_types)):
         if xplane_type == acf_types[i].get_xplane_type():
             return acf_types[i]
-    unknown_aircraft = AircraftInfo(xplane_type, 'Unknown mfr.', 'Unknown type', 0, 'Land')
+    unknown_aircraft = AircraftInfo(xplane_type, 'Unknown mfr.', xplane_type, 0, 'Unknown', 'Land')
     return unknown_aircraft
 
 
@@ -296,7 +313,7 @@ def input_from_csv_file():
                 year, month, day = int(this_flight_date[2]), int(this_flight_date[0]), int(this_flight_date[1])
                 # noinspection PyTypeChecker
                 row[0] = date(year, month, day)
-                current_flight = Flight(*row[0:9], AircraftInfo(*row[9:14]))
+                current_flight = Flight(*row[0:9], AircraftInfo(*row[9:15]))
                 flights.append(current_flight)
     return flights
 
@@ -304,11 +321,11 @@ def input_from_csv_file():
 def print_flights(flights):
     flights_list = []
     for i in range(len(flights)):
-        flights_list.append([i + 1, *flights[i].get_full_info()])
+        flights_list.append([i + 1, *flights[i].get_list_analogue()])
     flights_table = PrettyTable()
     flights_table.field_names = ['#', 'Flight date', 'Dep. ICAO', 'Arr. ICAO', 'LDG #', 'Total hours', 'Night hours',
                                  'IFR hours', 'C/C hours', 'Tailnumber', 'ACF manufacturer', 'ACF type', 'ENG #',
-                                 'ACF class']
+                                 'ENG type', 'ACF class']
     flights_table.add_rows(flights_list)
     flights_table.align = 'c'
     print(flights_table)
@@ -377,6 +394,8 @@ def edit_flights(flights):
             flight.set_aircraft_type(user_input())
             print('Enter new engine count (current:' + str(flight.get_engines_count()) + '):')
             flight.set_engines_count(user_input())
+            print('Enter new engine type (current:' + str(flight.get_engines_type()) + '):')
+            flight.set_engine_type(user_input())
             print('Select new aircraft class (current:' + flight.get_aircraft_class() + '):')
             print_menu(class_menu)
             acf_class = user_input()
@@ -447,6 +466,12 @@ def calculate_total_by_engine_count(flights):
     return
 
 
+def calculate_total_by_engine_type(flights):
+    sum_hours(flights, "get_engines_type", ['Engines type', 'Total hours', 'Total night hours', 'Total IFR hours',
+                                            'Total C/C hours', 'Total landings'])
+    return
+
+
 def calculate_total_by_aircraft_class(flights):
     sum_hours(flights, "get_aircraft_class", ['Aircraft class', 'Total hours', 'Total night hours', 'Total IFR hours',
                                               'Total C/C hours', 'Total landings'])
@@ -496,6 +521,8 @@ def calculate_stats(flights):
             case 4:
                 calculate_total_by_engine_count(flights)
             case 5:
+                calculate_total_by_engine_type(flights)
+            case 6:
                 calculate_total_by_aircraft_class(flights)
             case 9:
                 return
@@ -533,18 +560,20 @@ def add_type_reference(acf_types):
     acf_type[1] = user_input()
     print('Enter aircraft type:')
     acf_type[2] = user_input()
-    print('Enter engines count:')
+    print('Enter engine count:')
     acf_type[3] = user_input()
+    print('Enter engine type:')
+    acf_type[4] = user_input()
 
     # Land/Seaplane/Amphibian
     print_menu(class_menu)
     acf_class = user_input()
-    acf_type[4] = 'Land'
+    acf_type[5] = 'Land'
     match acf_class:
         case 2:
-            acf_type[4] = 'Seaplane'
+            acf_type[5] = 'Seaplane'
         case 3:
-            acf_type[4] = 'Amphibian'
+            acf_type[5] = 'Amphibian'
 
     new_acf_type = AircraftInfo(*acf_type)
     acf_types.append(new_acf_type)
@@ -571,7 +600,7 @@ def print_acf_types(acf_types):
     for i in range(len(acf_types)):
         acf_types_list.append([i + 1, *acf_types[i].get_full_info()])
     types_table = PrettyTable()
-    types_table.field_names = ['#', 'X-Plane type', 'ACF manufacturer', 'ACF type', 'ENG #', 'ACF class']
+    types_table.field_names = ['#', 'X-Plane type', 'ACF manufacturer', 'ACF type', 'ENG #', 'ENG type', 'ACF class']
     types_table.add_rows(acf_types_list)
     types_table.align = 'c'
     print(types_table)
