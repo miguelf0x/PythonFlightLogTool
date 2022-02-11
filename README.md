@@ -1,3 +1,5 @@
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/19aa525569904d73820c4de9b96653c2)](https://www.codacy.com/gh/miguelf0x/PythonFlightLogTool/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=miguelf0x/PythonFlightLogTool&amp;utm_campaign=Badge_Grade)
+
 # PyFlightLogTool
 
 This utility was created to do some operations with X-Plane 11 flight log. Originally it was written in C++.
