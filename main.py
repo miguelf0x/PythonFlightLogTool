@@ -356,10 +356,10 @@ def edit_flights(flights):
     flight = flights[i-1]
 
     print_menu(edit_menu)
-    j = 8
-    while j != 0:
-        j = user_input()
-        match j:
+    choice = 8
+    while choice != 0:
+        choice = user_input()
+        match choice:
             case 1:
                 print('Enter new flight date (YYYY/MM/DD)')
                 flight.set_flight_date(user_input())
